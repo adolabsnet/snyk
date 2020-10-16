@@ -13,6 +13,11 @@ const iswindows =
     .toLowerCase()
     .indexOf('windows') === 0;
 
+const islinux =
+  osName()
+    .toLowerCase()
+    .indexOf('linux') === 0;
+
 // TODO(kyegupov): make these work in Windows
 test('snyk test command should fail when --file is not specified correctly', (t) => {
   t.plan(1);
@@ -493,7 +498,7 @@ test('`container test --json-file-output can be used at the same time as --sarif
   t.plan(3);
 
   exec(
-    `node ${main} container test alpine --file=test/acceptance/fixtures/docker/Dockerfile --sarif-file-output=snyk-direct-sarif-test-output.json --json-file-output=snyk-direct-json-test-output.json`,
+    `node ${main} container test hello-world --file=test/acceptance/fixtures/docker/Dockerfile --sarif-file-output=snyk-direct-sarif-test-output.json --json-file-output=snyk-direct-json-test-output.json`,
     (err, stdout) => {
       if (err) {
         throw err;
@@ -522,7 +527,7 @@ test('`test --sarif-file-output can be used at the same time as --sarif`', (t) =
   t.plan(2);
 
   exec(
-    `node ${main} container test alpine --sarif --file=test/acceptance/fixtures/docker/Dockerfile --sarif-file-output=snyk-direct-sarif-test-output.json`,
+    `node ${main} container test hello-world --sarif --file=test/acceptance/fixtures/docker/Dockerfile --sarif-file-output=snyk-direct-sarif-test-output.json`,
     (err, stdout) => {
       if (err) {
         throw err;
@@ -545,7 +550,7 @@ test('`test --sarif-file-output without vulns`', (t) => {
   t.plan(1);
 
   exec(
-    `node ${main} container test alpine --file=test/acceptance/fixtures/docker/Dockerfile --sarif-file-output=snyk-direct-sarif-test-output.json`,
+    `node ${main} container test hello-world --file=test/acceptance/fixtures/docker/Dockerfile --sarif-file-output=snyk-direct-sarif-test-output.json`,
     (err) => {
       if (err) {
         throw err;
@@ -562,25 +567,29 @@ test('`test --sarif-file-output without vulns`', (t) => {
   );
 });
 
-test('`test --sarif-file-output can be used at the same time as --json with vulns`', (t) => {
-  t.plan(2);
+test(
+  '`test ubuntu --sarif-file-output can be used at the same time as --json with vulns`',
+  { skip: iswindows },
+  (t) => {
+    t.plan(2);
 
-  exec(
-    `node ${main} container test ubuntu --json --file=test/acceptance/fixtures/docker/Dockerfile --sarif-file-output=snyk-direct-sarif-test-output.json`,
-    (err, stdout) => {
-      if (err) {
-        throw err;
-      }
-      const sarifOutput = JSON.parse(
-        readFileSync('snyk-direct-sarif-test-output.json', 'utf-8'),
-      );
+    exec(
+      `node ${main} container test ubuntu --json --file=test/acceptance/fixtures/docker/Dockerfile --sarif-file-output=snyk-direct-sarif-test-output.json`,
+      (err, stdout) => {
+        if (err) {
+          throw err;
+        }
+        const sarifOutput = JSON.parse(
+          readFileSync('snyk-direct-sarif-test-output.json', 'utf-8'),
+        );
 
-      unlinkSync('./snyk-direct-sarif-test-output.json');
+        unlinkSync('./snyk-direct-sarif-test-output.json');
 
-      const jsonObj = JSON.parse(stdout);
-      t.notEqual(jsonObj.vulnerabilities.length, 0, 'has vulns');
-      t.match(sarifOutput.version, '2.1.0', 'SARIF output file OK');
-      t.end();
-    },
-  );
-});
+        const jsonObj = JSON.parse(stdout);
+        t.notEqual(jsonObj.vulnerabilities.length, 0, 'has vulns');
+        t.match(sarifOutput.version, '2.1.0', 'SARIF output file OK');
+        t.end();
+      },
+    );
+  },
+);
