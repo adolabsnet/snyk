@@ -13,8 +13,11 @@ import * as fs from 'fs';
 import { ArgsOptions } from '../cli/args';
 import { join } from 'path';
 
-export const INTEGRATION_NAME_HEADER = 'SNYK_INTEGRATION_NAME';
-export const INTEGRATION_VERSION_HEADER = 'SNYK_INTEGRATION_VERSION';
+export const INTEGRATION_NAME_ENVVAR = 'SNYK_INTEGRATION_NAME';
+export const INTEGRATION_VERSION_ENVVAR = 'SNYK_INTEGRATION_VERSION';
+export const INTEGRATION_ENVIRONMENT_ENVVAR = 'SNYK_INTEGRATION_ENVIRONMENT';
+export const INTEGRATION_ENVIRONMENT_VERSION_ENVVAR =
+  'SNYK_INTEGRATION_ENVIRONMENT_VERSION';
 
 enum TrackedIntegration {
   // Distribution builds/packages
@@ -56,7 +59,7 @@ export const getIntegrationName = (args: ArgsOptions[]): string => {
 
   const integrationName = String(
     args[0]?.integrationName || // Integration details passed through CLI flag
-      process.env[INTEGRATION_NAME_HEADER] ||
+      process.env[INTEGRATION_NAME_ENVVAR] ||
       maybeHomebrew ||
       maybeScoop ||
       '',
@@ -72,12 +75,24 @@ export const getIntegrationVersion = (args: ArgsOptions[]): string => {
   // Integration details passed through CLI flag
   const integrationVersion = String(
     args[0]?.integrationVersion ||
-      process.env[INTEGRATION_VERSION_HEADER] ||
+      process.env[INTEGRATION_VERSION_ENVVAR] ||
       '',
   );
 
   return integrationVersion;
 };
+
+export const getIntegrationEnvironment = (args: ArgsOptions[]): string | void =>
+  (args[0]?.integrationEnvironment as string) ||
+  process.env[INTEGRATION_ENVIRONMENT_ENVVAR] ||
+  undefined;
+
+export const getIntegrationEnvironmentVersion = (
+  args: ArgsOptions[],
+): string | void =>
+  (args[0]?.integrationEnvironmentVersion as string) ||
+  process.env[INTEGRATION_ENVIRONMENT_VERSION_ENVVAR] ||
+  undefined;
 
 export function isScoop(): boolean {
   const currentProcessPath = process.execPath;

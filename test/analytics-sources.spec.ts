@@ -1,8 +1,12 @@
 import {
   getIntegrationName,
   getIntegrationVersion,
-  INTEGRATION_NAME_HEADER,
-  INTEGRATION_VERSION_HEADER,
+  getIntegrationEnvironment,
+  getIntegrationEnvironmentVersion,
+  INTEGRATION_NAME_ENVVAR,
+  INTEGRATION_VERSION_ENVVAR,
+  INTEGRATION_ENVIRONMENT_ENVVAR,
+  INTEGRATION_ENVIRONMENT_VERSION_ENVVAR,
   isScoop,
   isHomebrew,
   validateHomebrew,
@@ -18,8 +22,10 @@ const defaultArgsParams = {
 };
 
 beforeEach(() => {
-  delete process.env[INTEGRATION_NAME_HEADER];
-  delete process.env[INTEGRATION_VERSION_HEADER];
+  delete process.env[INTEGRATION_NAME_ENVVAR];
+  delete process.env[INTEGRATION_VERSION_ENVVAR];
+  delete process.env[INTEGRATION_ENVIRONMENT_ENVVAR];
+  delete process.env[INTEGRATION_ENVIRONMENT_VERSION_ENVVAR];
 });
 
 describe('analytics-sources - scoop detection', () => {
@@ -99,15 +105,15 @@ describe('analytics-sources - getIntegrationName', () => {
   });
 
   it('integration name is loaded from envvar', () => {
-    process.env[INTEGRATION_NAME_HEADER] = 'NPM';
+    process.env[INTEGRATION_NAME_ENVVAR] = 'NPM';
     expect(getIntegrationName(emptyArgs)).toBe('NPM');
 
-    process.env[INTEGRATION_NAME_HEADER] = 'STANDALONE';
+    process.env[INTEGRATION_NAME_ENVVAR] = 'STANDALONE';
     expect(getIntegrationName(emptyArgs)).toBe('STANDALONE');
   });
 
   it('integration name is empty when envvar is not recognized', () => {
-    process.env[INTEGRATION_NAME_HEADER] = 'INVALID';
+    process.env[INTEGRATION_NAME_ENVVAR] = 'INVALID';
     expect(getIntegrationName(emptyArgs)).toBe('');
   });
 
@@ -150,7 +156,7 @@ describe('analytics-sources - getIntegrationVersion', () => {
   });
 
   it('integration version is loaded from envvar', () => {
-    process.env[INTEGRATION_VERSION_HEADER] = '1.2.3';
+    process.env[INTEGRATION_VERSION_ENVVAR] = '1.2.3';
     expect(getIntegrationVersion(emptyArgs)).toBe('1.2.3');
   });
 
@@ -160,5 +166,43 @@ describe('analytics-sources - getIntegrationVersion', () => {
         { integrationVersion: '1.2.3-Crystal', ...defaultArgsParams },
       ]),
     ).toBe('1.2.3-Crystal');
+  });
+});
+
+describe('analytics-sources - getIntegrationEnvironment', () => {
+  it('integration environment is empty by default', () => {
+    expect(getIntegrationEnvironment(emptyArgs)).toBe(undefined);
+  });
+
+  it('integration environment is loaded from envvar', () => {
+    process.env[INTEGRATION_ENVIRONMENT_ENVVAR] = 'WebStorm';
+    expect(getIntegrationEnvironment(emptyArgs)).toBe('WebStorm');
+  });
+
+  it('integration environment is loaded from CLI flag', () => {
+    expect(
+      getIntegrationEnvironment([
+        { integrationEnvironment: 'PhpStorm', ...defaultArgsParams },
+      ]),
+    ).toBe('PhpStorm');
+  });
+});
+
+describe('analytics-sources - getIntegrationEnvironment', () => {
+  it('integration environment version is empty by default', () => {
+    expect(getIntegrationEnvironmentVersion(emptyArgs)).toBe(undefined);
+  });
+
+  it('integration environment version is loaded from envvar', () => {
+    process.env[INTEGRATION_ENVIRONMENT_VERSION_ENVVAR] = '2020.2';
+    expect(getIntegrationEnvironmentVersion(emptyArgs)).toBe('2020.2');
+  });
+
+  it('integration environment version is loaded from CLI flag', () => {
+    expect(
+      getIntegrationEnvironmentVersion([
+        { integrationEnvironmentVersion: '7.0.0', ...defaultArgsParams },
+      ]),
+    ).toBe('7.0.0');
   });
 });
